@@ -2,19 +2,10 @@ const canvas = document.querySelector("canvas");
 const ctx = canvas.getContext("2d");
 const progressBar = document.querySelector("progress");
 
-function startGame() {
-  if (progressBar.value === 0) {
-    progressBar.value = 100;
-    Object.assign(player, { x: canvas.width / 2, y: canvas.height / 2 });
-    requestAnimationFrame(drawScene);
-  }
-}
-
 function distanceBetween(sprite1, sprite2) {
   return Math.hypot(sprite1.x - sprite2.x, sprite1.y - sprite2.y);
 }
 
-// Woops there is a bug because the player image is a rectangle
 function haveCollided(sprite1, sprite2) {
   return distanceBetween(sprite1, sprite2) < sprite1.radius + sprite2.radius;
 }
@@ -30,33 +21,32 @@ class Sprite {
 }
 
 class Player extends Sprite {
-  constructor(x, y, radius, color, speed) {
+  constructor(x, y, radius, speed) {
     super();
     this.image = new Image();
-    this.image.src = "https://image.ibb.co/fPcP2w/8_Bit_Character_1_copy.png";
-    Object.assign(this, { x, y, radius, color, speed });
+    this.image.src = "http://moziru.com/images/pies-clipart-cheese-pizza-12.png";
+    Object.assign(this, { x, y, radius, speed });
   }
   draw() {
-    ctx.drawImage(this.image, this.x, this.y, 25, 30);
+    ctx.drawImage(this.image, this.x, this.y, 25, 25);
   }
 }
 
-let player = new Player(250, 150, 10, "lemonchiffon", 0.07);
+let player = new Player(500, 500, 5, 0.07);
 
 class Enemy extends Sprite {
-  constructor(x, y, radius, color, speed) {
+  constructor(x, y, radius, speed) {
     super();
-    Object.assign(this, { x, y, radius, color, speed });
+    this.image = new Image();
+    this.image.src = "https://cdnjs.cloudflare.com/ajax/libs/twemoji/2.2.5/2/svg/1f924.svg";
+    Object.assign(this, { x, y, radius, speed });
+  }
+  draw() {
+    ctx.drawImage(this.image, this.x, this.y, 50, 50);
   }
 }
 
-let enemies = [
-  new Enemy(80, 200, 20, "rgba(250, 0, 50, 0.8)", 0.02),
-  new Enemy(200, 250, 17, "rgba(200, 100, 0, 0.7)", 0.01),
-  new Enemy(150, 180, 22, "rgba(50, 10, 70, 0.5)", 0.002),
-  new Enemy(0, 200, 10, "rgba(250, 210, 70, 0.6)", 0.008),
-  new Enemy(400, 400, 15, "rgba(0, 200, 250, 0.6)", 0.008),
-];
+let enemies;
 
 let mouse = { x: 0, y: 0 };
 document.body.addEventListener("mousemove", updateMouse);
@@ -66,7 +56,26 @@ function updateMouse(event) {
   mouse.y = event.clientY - top;
 }
 
-// TODO function start game here
+function drawStartScreen() {
+  ctx.fillStyle = "brown";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = "linen";
+  ctx.font = "30px Brush Script MT";
+  ctx.textAlign = "center";
+  ctx.fillText("Avoid the hungry Customers!", canvas.width / 2, canvas.height / 2);
+  canvas.addEventListener("click", startGame);
+
+}
+
+function drawDeathScreen() {
+  ctx.fillStyle = "linen";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = "brown";
+  ctx.font = "30px Brush Script MT";
+  ctx.textAlign = "center";
+  ctx.fillText("You were gobbled up! Click to try again.", canvas.width / 2, canvas.height / 2);
+  canvas.addEventListener("click", startGame);
+}
 
 function moveToward(leader, follower, speed) {
   follower.x += (leader.x - follower.x) * speed;
@@ -87,6 +96,20 @@ function pushOff(c1, c2) {
   }
 }
 
+function startGame() {
+  canvas.removeEventListener("click", startGame);
+    progressBar.value = 100;
+    Object.assign(player, { x: canvas.width / 2, y: canvas.height / 2 });
+    enemies = [
+  new Enemy(80, 200, 25, 0.02),
+  new Enemy(200, 250, 25, 0.01),
+  new Enemy(150, 180, 25, 0.002),
+  new Enemy(0, 200, 25, 0.008),
+  new Enemy(400, 400, 25, 0.008),
+];
+    requestAnimationFrame(drawScene);
+}
+
 function updateScene() {
   moveToward(mouse, player, player.speed);
   enemies.forEach(enemy => moveToward(player, enemy, enemy.speed));
@@ -103,7 +126,7 @@ function updateScene() {
 }
 
 function clearBackground() {
-  ctx.fillStyle = "lightgreen";
+  ctx.fillStyle = "lightbrown";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 }
 
@@ -113,12 +136,10 @@ function drawScene() {
   enemies.forEach(enemy => enemy.draw());
   updateScene();
   if (progressBar.value <= 0) {
-    ctx.font = "30px Arial";
-    ctx.fillText("Game over, click to play again", 0, canvas.height / 2);
+    drawDeathScreen();
   } else {
     requestAnimationFrame(drawScene);
   }
 }
 
-canvas.addEventListener("click", startGame);
-requestAnimationFrame(drawScene);
+drawStartScreen();
